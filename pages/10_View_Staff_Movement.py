@@ -9,6 +9,9 @@ from datetime import datetime
 import face_utils
 from auth import authenticator
 
+from utils.session import init_auth_session_keys
+init_auth_session_keys()
+
 st.subheader('Staff Movement Records')
 
 # Apply custom styling
@@ -19,11 +22,7 @@ st.markdown(LAGOS_STYLE, unsafe_allow_html=True)
 st.markdown(get_topbar_style(), unsafe_allow_html=True)
 st.markdown(get_topbar_html(), unsafe_allow_html=True)
 
-# Authentication check
-if 'authentication_status' not in st.session_state:
-    st.session_state['authentication_status'] = None
-
-if not st.session_state.authentication_status:
+if not st.session_state.get("authentication_status"):
     name, authentication_status, username = authenticator.login('Login', 'main')
     if authentication_status:
         st.session_state.update({

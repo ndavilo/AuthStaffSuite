@@ -18,6 +18,10 @@ authenticator = init_authenticator()
 
 def login():
     try:
+        # Only initialize logout key if not present
+        if 'logout' not in st.session_state:
+            st.session_state['logout'] = True  # Assume logged out by default
+
         return authenticator.login('Login', 'main')
     except Exception as e:
         st.error(f"Login failed: {str(e)}")
