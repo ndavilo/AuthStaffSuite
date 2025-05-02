@@ -31,7 +31,7 @@ with st.spinner('Retrieving Data from Database ...'):
     import face_utils
     redis_face_db = face_utils.retrive_data(name='staff:register')
 
-waitTime = 10  # time in sec
+waitTime = 5  # time in sec
 setTime = time.time()
 realtimepred = face_utils.RealTimePrediction()
 last_action_status = None

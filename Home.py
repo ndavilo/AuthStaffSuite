@@ -85,42 +85,72 @@ def load_data_from_redis():
     name = 'attendance:logs'
     logs = face_utils.load_logs(name=name)
     cleaned_logs = []
+    
     for log in logs:
-        if isinstance(log, bytes):
-            log = log.decode('utf-8')
-        log = log.strip("b'")
-        parts = log.split('@')
-        if len(parts) >= 4:  # Updated to handle both old and new formats
-            # Extract name and role (first two parts)
+        try:
+            if isinstance(log, bytes):
+                log = log.decode('utf-8')
+            log = log.strip("b'")
+            parts = log.split('@')
+            
+            # Skip malformed entries
+            if len(parts) < 4:
+                continue
+                
             file_name_role = parts[0]
             role = parts[1]
-            timestamp = parts[-2]  # Second last part is timestamp
-            Clock_In_Out = parts[-1]  # Last part is action
+            timestamp = parts[-2]  # Second last part should be timestamp
+            action = parts[-1]     # Last part is Clock_In/Clock_Out
             
-            # Handle zone if present (parts[2] would be zone in new format)
-            zone = 'Lagos Zone 2'  # Default if not specified
+            # Skip if timestamp is actually an action (malformed data)
+            if timestamp in ['Clock_In', 'Clock_Out']:
+                continue
+                
+            # Handle file number and name
+            if '.' in file_name_role:
+                file_no, name = file_name_role.split('.', 1)
+            else:
+                file_no = ''
+                name = file_name_role
+                
+            # Handle zone (default to Lagos Zone 2 if not specified)
+            zone = 'Lagos Zone 2'
             if len(parts) == 5:  # New format with zone
                 zone = parts[2]
-            
-            file_no, name = file_name_role.split('.', 1)
+                
             cleaned_logs.append({
                 'File No.': file_no,
                 'Name': name,
                 'Role': role,
-                'Zone': zone,  # Added zone
+                'Zone': zone,
                 'Timestamp': timestamp,
-                'Clock_In_Out': Clock_In_Out
+                'Clock_In_Out': action
             })
+            
+        except Exception as e:
+            print(f"Error processing log entry: {log}. Error: {str(e)}")
+            continue
 
     if not cleaned_logs:
         return pd.DataFrame()
 
     df = pd.DataFrame(cleaned_logs)
-    df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+    
+    # Convert timestamp with error handling
+    try:
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'], errors='coerce')
+        # Remove rows where timestamp couldn't be parsed
+        df = df.dropna(subset=['Timestamp'])
+    except Exception as e:
+        print(f"Error converting timestamps: {str(e)}")
+        return pd.DataFrame()
+    
+    # Create derived datetime fields
     df['Date'] = df['Timestamp'].dt.date
     df['Time'] = df['Timestamp'].dt.time
     df['Hour'] = df['Timestamp'].dt.hour
     df['Day'] = df['Timestamp'].dt.day_name()
+    
     return df
 
 def main():
