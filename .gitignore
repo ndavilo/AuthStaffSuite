@@ -1,0 +1,21 @@
+# Environment files
+.env
+virtualenv/
+virtualenv
+
+# Embedding & model files
+movement_embedding.txt
+
+# Bytecode and cache
+__pycache__/
+*.pyc
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+.streamlit/secrets.toml
+.streamlit/
+config.yaml
+__pycache__
+pages/__pycache__
